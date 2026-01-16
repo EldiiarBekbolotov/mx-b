@@ -1,14 +1,13 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/cannon';
 import { Stars } from '@react-three/drei';
 import { Player } from './Player';
 import { TrackManager } from './TrackManager';
 import { useGameStore } from '../store';
-import { GameState } from '../types';
 
 export const GameScene: React.FC = () => {
-    const { gameState, getCurrentBackgroundSkin } = useGameStore();
+    const { getCurrentBackgroundSkin } = useGameStore();
     const backgroundSkin = getCurrentBackgroundSkin();
 
     return (

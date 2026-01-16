@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { 
-    GameState, 
-    Difficulty, 
-    BallSkin, 
-    BackgroundSkin, 
+import {
+    GameState,
+    Difficulty,
+    BallSkin,
+    BackgroundSkin,
     LeaderboardEntry,
     GameOptions,
     GamePattern,
@@ -21,51 +21,51 @@ interface GameStore {
     platformsCleared: number;
     currentSpeed: number;
     baseSpeed: number;
-    
+
     // Lives System
     lives: number;
     maxLives: number;
-    
+
     // Currency
     coins: number;
     totalCoinsCollected: number;
-    
+
     // Game Pattern
     currentPattern: GamePattern;
     patternPlatformCount: number;
-    
+
     // Leaderboard
     leaderboard: LeaderboardEntry[];
-    
+
     // Shop
     ballSkins: BallSkin[];
     backgroundSkins: BackgroundSkin[];
-    
+
     // Options
     options: GameOptions;
-    
+
     // Actions
     setGameState: (state: GameState) => void;
     setScore: (score: number) => void;
     incrementScore: (amount: number) => void;
     incrementPlatformsCleared: () => void;
     resetGame: () => void;
-    
+
     // Lives
     addLife: () => void;
     loseLife: () => boolean; // Returns true if game over
-    
+
     // Coins
     collectCoin: () => void;
     spendCoins: (amount: number) => boolean;
-    
+
     // Speed
     updateSpeed: () => void;
     getSpeedMultiplier: () => number;
-    
+
     // Pattern
     switchPattern: () => void;
-    
+
     // Shop
     purchaseBallSkin: (skinId: string) => boolean;
     purchaseBackgroundSkin: (skinId: string) => boolean;
@@ -73,13 +73,13 @@ interface GameStore {
     selectBackgroundSkin: (skinId: string) => void;
     getCurrentBallSkin: () => BallSkin;
     getCurrentBackgroundSkin: () => BackgroundSkin;
-    
+
     // Options
     setDifficulty: (difficulty: Difficulty) => void;
     setMusicVolume: (volume: number) => void;
     setSfxVolume: (volume: number) => void;
     setInputBinding: (action: 'left' | 'right' | 'jump', keys: string[]) => void;
-    
+
     // Leaderboard
     addToLeaderboard: (score: number) => void;
 }
@@ -99,7 +99,7 @@ const loadSavedData = () => {
         sfxVolume: 0.8,
         inputBindings: DEFAULT_INPUT_BINDINGS
     };
-    
+
     return {
         coins: savedCoins,
         highScore: savedHighScore,
@@ -120,24 +120,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     platformsCleared: 0,
     currentSpeed: 1.0,
     baseSpeed: 18,
-    
+
     lives: 1,
     maxLives: 3,
-    
+
     coins: savedData.coins,
     totalCoinsCollected: 0,
-    
+
     currentPattern: GamePattern.FLAT_WITH_OBSTACLES,
     patternPlatformCount: 0,
-    
+
     leaderboard: savedData.leaderboard,
     ballSkins: savedData.ballSkins,
     backgroundSkins: savedData.backgroundSkins,
     options: savedData.options,
-    
+
     // Actions
     setGameState: (state) => set({ gameState: state }),
-    
+
     setScore: (score) => set((state) => {
         const newHighScore = Math.max(state.highScore, score);
         if (newHighScore > state.highScore) {
@@ -145,7 +145,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         return { score, highScore: newHighScore };
     }),
-    
+
     incrementScore: (amount) => set((state) => {
         const newScore = state.score + amount;
         const newHighScore = Math.max(state.highScore, newScore);
@@ -154,11 +154,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         return { score: newScore, highScore: newHighScore };
     }),
-    
+
     incrementPlatformsCleared: () => set((state) => {
         const newCount = state.platformsCleared + 1;
         const newPatternCount = state.patternPlatformCount + 1;
-        
+
         // Check if we need to switch patterns (every 20 platforms)
         let newPattern = state.currentPattern;
         let resetPatternCount = newPatternCount;
@@ -168,18 +168,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 : GamePattern.FLAT_WITH_OBSTACLES;
             resetPatternCount = 0;
         }
-        
+
         // Calculate new speed based on platforms cleared
         const speedIncrease = Math.floor(newCount / 10) * 0.05;
         const newSpeed = Math.min(1.0 + speedIncrease, 2.0);
-        
+
         // Update high score if needed
         const newScore = state.score + 1;
         const newHighScore = Math.max(state.highScore, newScore);
         if (newHighScore > state.highScore) {
             localStorage.setItem('slope-highscore', newHighScore.toString());
         }
-        
+
         return {
             platformsCleared: newCount,
             patternPlatformCount: resetPatternCount,
@@ -189,9 +189,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
             currentSpeed: newSpeed
         };
     }),
-    
-    resetGame: () => set((state) => ({ 
-        score: 0, 
+
+    resetGame: () => set(() => ({
+        score: 0,
         platformsCleared: 0,
         lives: 1,
         totalCoinsCollected: 0,
@@ -199,12 +199,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         currentPattern: GamePattern.FLAT_WITH_OBSTACLES,
         patternPlatformCount: 0
     })),
-    
+
     // Lives
     addLife: () => set((state) => ({
         lives: Math.min(state.lives + 1, state.maxLives)
     })),
-    
+
     loseLife: () => {
         const state = get();
         if (state.lives <= 1) {
@@ -214,17 +214,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ lives: state.lives - 1 });
         return false; // Continue playing
     },
-    
+
     // Coins
     collectCoin: () => set((state) => {
         const newCoins = state.coins + 1;
         localStorage.setItem('slope-coins', newCoins.toString());
-        return { 
+        return {
             coins: newCoins,
             totalCoinsCollected: state.totalCoinsCollected + 1
         };
     }),
-    
+
     spendCoins: (amount) => {
         const state = get();
         if (state.coins >= amount) {
@@ -235,7 +235,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         return false;
     },
-    
+
     // Speed - only update if speed actually changed to avoid re-render loops
     updateSpeed: () => {
         const state = get();
@@ -246,29 +246,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
             set({ currentSpeed: newSpeed });
         }
     },
-    
+
     getSpeedMultiplier: () => {
         const state = get();
         const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[state.options.difficulty];
         return state.currentSpeed * difficultyMultiplier;
     },
-    
+
     // Pattern
     switchPattern: () => set((state) => ({
-        currentPattern: state.currentPattern === GamePattern.FLAT_WITH_OBSTACLES 
-            ? GamePattern.NON_FLAT_NO_OBSTACLES 
+        currentPattern: state.currentPattern === GamePattern.FLAT_WITH_OBSTACLES
+            ? GamePattern.NON_FLAT_NO_OBSTACLES
             : GamePattern.FLAT_WITH_OBSTACLES,
         patternPlatformCount: 0
     })),
-    
+
     // Shop
     purchaseBallSkin: (skinId) => {
         const state = get();
         const skin = state.ballSkins.find(s => s.id === skinId);
         if (!skin || skin.owned) return false;
-        
+
         if (state.spendCoins(skin.price)) {
-            const updatedSkins = state.ballSkins.map(s => 
+            const updatedSkins = state.ballSkins.map(s =>
                 s.id === skinId ? { ...s, owned: true } : s
             );
             localStorage.setItem('slope-ballskins', JSON.stringify(updatedSkins));
@@ -277,14 +277,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         return false;
     },
-    
+
     purchaseBackgroundSkin: (skinId) => {
         const state = get();
         const skin = state.backgroundSkins.find(s => s.id === skinId);
         if (!skin || skin.owned) return false;
-        
+
         if (state.spendCoins(skin.price)) {
-            const updatedSkins = state.backgroundSkins.map(s => 
+            const updatedSkins = state.backgroundSkins.map(s =>
                 s.id === skinId ? { ...s, owned: true } : s
             );
             localStorage.setItem('slope-backgroundskins', JSON.stringify(updatedSkins));
@@ -293,7 +293,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         return false;
     },
-    
+
     selectBallSkin: (skinId) => {
         const state = get();
         const skin = state.ballSkins.find(s => s.id === skinId);
@@ -303,7 +303,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             set({ options: newOptions });
         }
     },
-    
+
     selectBackgroundSkin: (skinId) => {
         const state = get();
         const skin = state.backgroundSkins.find(s => s.id === skinId);
@@ -313,43 +313,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
             set({ options: newOptions });
         }
     },
-    
+
     getCurrentBallSkin: () => {
         const state = get();
         return state.ballSkins.find(s => s.id === state.options.ballSkinId) || state.ballSkins[0];
     },
-    
+
     getCurrentBackgroundSkin: () => {
         const state = get();
         return state.backgroundSkins.find(s => s.id === state.options.backgroundSkinId) || state.backgroundSkins[0];
     },
-    
+
     // Options
     setDifficulty: (difficulty) => set((state) => {
         const newOptions = { ...state.options, difficulty };
         localStorage.setItem('slope-options', JSON.stringify(newOptions));
         return { options: newOptions };
     }),
-    
+
     setMusicVolume: (volume) => set((state) => {
         const newOptions = { ...state.options, musicVolume: volume };
         localStorage.setItem('slope-options', JSON.stringify(newOptions));
         return { options: newOptions };
     }),
-    
+
     setSfxVolume: (volume) => set((state) => {
         const newOptions = { ...state.options, sfxVolume: volume };
         localStorage.setItem('slope-options', JSON.stringify(newOptions));
         return { options: newOptions };
     }),
-    
+
     setInputBinding: (action, keys) => set((state) => {
         const newBindings = { ...state.options.inputBindings, [action]: keys };
         const newOptions = { ...state.options, inputBindings: newBindings };
         localStorage.setItem('slope-options', JSON.stringify(newOptions));
         return { options: newOptions };
     }),
-    
+
     // Leaderboard
     addToLeaderboard: (score) => set((state) => {
         const newEntry: LeaderboardEntry = {
@@ -357,12 +357,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
             score,
             date: new Date().toISOString().split('T')[0]
         };
-        
+
         const updatedLeaderboard = [...state.leaderboard, newEntry]
             .sort((a, b) => b.score - a.score)
             .slice(0, 10)
             .map((entry, index) => ({ ...entry, rank: index + 1 }));
-        
+
         localStorage.setItem('slope-leaderboard', JSON.stringify(updatedLeaderboard));
         return { leaderboard: updatedLeaderboard };
     })
