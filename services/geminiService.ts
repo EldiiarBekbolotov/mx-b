@@ -1,11 +1,15 @@
-
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Fix: Updated service to follow guidelines for initialization and direct API usage
 export const generateGameCommentary = async (score: number, highScore: number): Promise<string> => {
     try {
-        // Fix: Always initialize right before making an API call using the required named parameter
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+        if (!apiKey) {
+            return "API key not configured. Set VITE_GEMINI_API_KEY in your environment.";
+        }
+        
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const isNewHigh = score >= highScore && score > 0;
 
         const prompt = `
@@ -21,14 +25,9 @@ export const generateGameCommentary = async (score: number, highScore: number): 
       If it's a new high score, celebrate wildly.
     `;
 
-        // Fix: Call generateContent with the model name and prompt string
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: prompt,
-        });
-
-        // Fix: Access response.text directly as a property (not a method)
-        return response.text || "Connection terminated. Try again runner.";
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text() || "Connection terminated. Try again runner.";
     } catch (error) {
         console.error("Gemini API Error:", error);
         return "Communication systems offline.";
