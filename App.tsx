@@ -5,7 +5,7 @@ import { useGameStore } from './store';
 import { GameState } from './types';
 
 const App: React.FC = () => {
-    const { gameState, togglePause, setGameState } = useGameStore();
+    const { gameState, togglePause } = useGameStore();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
