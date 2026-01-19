@@ -20,10 +20,10 @@ const SpeedParticles: React.FC = () => {
         for (let i = 0; i < particleCount; i++) {
             const i3 = i * 3;
             
-            // Spawn particles behind camera in a wide area (relative to camera)
+            // Spawn particles immediately visible around the camera
             pos[i3] = (Math.random() - 0.5) * 100; // X spread
             pos[i3 + 1] = (Math.random() - 0.5) * 50; // Y spread
-            pos[i3 + 2] = -(Math.random() * spawnDistance + 550); // Z (behind camera, negative)
+            pos[i3 + 2] = -(Math.random() * spawnDistance + 50); // Z (behind camera, but close enough to be visible immediately)
             
             // Velocity towards camera/screen (positive Z moves towards camera)
             vel[i3] = (Math.random() - 0.5) * 1; // Slight X drift

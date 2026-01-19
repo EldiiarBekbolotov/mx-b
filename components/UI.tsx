@@ -1,6 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store';
 import { GameState, Difficulty, BallSkin, BackgroundSkin } from '../types';
+
+// Animated Star Background Component
+const StarBackground: React.FC = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const animationFrameRef = useRef<number>();
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Set canvas size
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Create stars
+        const starCount = 200;
+        const stars: Array<{ x: number; y: number; radius: number; speed: number; opacity: number }> = [];
+
+        for (let i = 0; i < starCount; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                speed: Math.random() * 0.5 + 0.2,
+                opacity: Math.random() * 0.5 + 0.5
+            });
+        }
+
+        // Animation loop
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+
+            stars.forEach(star => {
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+
+                ctx.globalAlpha = star.opacity;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.globalAlpha = 1;
+            animationFrameRef.current = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        return () => {
+            window.removeEventListener('resize', resizeCanvas);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ zIndex: 0 }}
+        />
+    );
+};
 
 // Heart Icon Component
 const HeartIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
@@ -34,11 +109,11 @@ const MenuButton: React.FC<{
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
 }> = ({ onClick, children, variant = 'secondary', disabled = false }) => {
-    const baseClasses = "px-8 py-3 font-bold text-lg rounded-full transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed font-jersey";
+    const baseClasses = "px-8 py-3 font-bold text-lg rounded-full transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed font-jersey backdrop-blur-md border";
     const variantClasses = {
-        primary: "bg-green-500 hover:bg-green-400 text-black hover:shadow-[0_0_20px_rgba(74,222,128,0.6)]",
-        secondary: "bg-gray-700 hover:bg-gray-600 text-white border border-gray-500",
-        danger: "bg-red-600 hover:bg-red-500 text-white"
+        primary: "bg-green-500/20 hover:bg-green-500/30 text-green-300 border-green-400/50 hover:border-green-400 hover:shadow-[0_0_20px_rgba(74,222,128,0.6)]",
+        secondary: "bg-white/10 hover:bg-white/20 text-white border-white/30 hover:border-white/50",
+        danger: "bg-red-600/20 hover:bg-red-600/30 text-red-300 border-red-400/50 hover:border-red-400"
     };
 
     return (
@@ -56,7 +131,7 @@ const MenuButton: React.FC<{
 const BackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     <button
         onClick={onClick}
-        className="absolute top-4 left-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg border border-gray-600 transition-colors font-jersey"
+        className="absolute top-4 left-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/30 hover:border-white/50 transition-colors font-jersey backdrop-blur-md"
     >
         ← Back
     </button>
@@ -122,7 +197,7 @@ const KeybindEditor: React.FC<{
                         </span>
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded font-jersey"
+                            className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-400/50 hover:border-purple-400 text-xs rounded font-jersey backdrop-blur-md"
                         >
                             Edit
                         </button>
@@ -130,7 +205,7 @@ const KeybindEditor: React.FC<{
                 ) : (
                     <div className="flex items-center gap-2">
                         <div
-                            className="px-3 py-1 bg-gray-700 text-white text-xs rounded min-w-[100px] text-center font-jersey"
+                            className="px-3 py-1 bg-white/10 backdrop-blur-md border border-white/30 text-white text-xs rounded min-w-[100px] text-center font-jersey"
                             onKeyDown={handleKeyDown}
                             tabIndex={0}
                         >
@@ -138,13 +213,13 @@ const KeybindEditor: React.FC<{
                         </div>
                         <button
                             onClick={handleSave}
-                            className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs rounded font-jersey"
+                            className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-400/50 hover:border-green-400 text-xs rounded font-jersey backdrop-blur-md"
                         >
                             ✓
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded font-jersey"
+                            className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-400/50 hover:border-red-400 text-xs rounded font-jersey backdrop-blur-md"
                         >
                             ✕
                         </button>
@@ -157,7 +232,7 @@ const KeybindEditor: React.FC<{
                         <button
                             key={key}
                             onClick={() => removeKey(key)}
-                            className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded font-jersey"
+                            className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white border border-white/30 hover:border-white/50 text-xs rounded font-jersey backdrop-blur-md"
                         >
                             {formatKey(key)} ×
                         </button>
@@ -179,21 +254,24 @@ const MainMenu: React.FC = () => {
 
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
+            {/* Animated Star Background */}
+            <StarBackground />
+
             {/* Info Button - Top Right */}
             <button
                 onClick={() => setGameState(GameState.INFO)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 flex items-center justify-center text-xl font-bold transition-colors"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/30 hover:border-white/50 flex items-center justify-center text-xl font-bold transition-colors backdrop-blur-md z-10"
             >
                 ?
             </button>
 
             {/* Coins Display - Top Left */}
-            <div className="absolute top-4 left-4 flex items-center gap-2 bg-gray-800/80 px-4 py-2 rounded-lg border border-gray-600">
+            <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/30 z-10">
                 <CoinIcon />
                 <span className="text-yellow-400 font-bold">{coins}</span>
             </div>
 
-            <div className="text-center space-y-8 p-12 border border-green-500/30 rounded-2xl bg-black/50 shadow-[0_0_50px_rgba(0,255,100,0.1)]">
+            <div className="text-center space-y-8 p-12 border border-green-500/30 rounded-2xl bg-black/50 shadow-[0_0_50px_rgba(0,255,100,0.1)] backdrop-blur-sm z-10">
                 <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 italic tracking-tighter drop-shadow-sm">
                     ASKEW
                 </h1>
@@ -422,7 +500,7 @@ const ShopScreen: React.FC = () => {
                     ) : (
                         <button
                             onClick={() => type === 'ball' ? selectBallSkin(skin.id) : selectBackgroundSkin(skin.id)}
-                            className="px-4 py-1 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-full transition-colors"
+                            className="px-4 py-1 bg-white/10 hover:bg-white/20 text-white border border-white/30 hover:border-white/50 text-sm rounded-full transition-colors backdrop-blur-md"
                         >
                             EQUIP
                         </button>
@@ -431,9 +509,9 @@ const ShopScreen: React.FC = () => {
                     <button
                         onClick={() => type === 'ball' ? purchaseBallSkin(skin.id) : purchaseBackgroundSkin(skin.id)}
                         disabled={coins < skin.price}
-                        className={`px-4 py-1 text-sm rounded-full transition-colors flex items-center gap-1 mx-auto ${coins >= skin.price
-                                ? 'bg-yellow-500 hover:bg-yellow-400 text-black'
-                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        className={`px-4 py-1 text-sm rounded-full transition-colors flex items-center gap-1 mx-auto backdrop-blur-md border ${coins >= skin.price
+                                ? 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-400/50 hover:border-yellow-400'
+                                : 'bg-white/5 text-gray-500 border-white/10 cursor-not-allowed'
                             }`}
                     >
                         <CoinIcon /> {skin.price}
@@ -448,7 +526,7 @@ const ShopScreen: React.FC = () => {
             <BackButton onClick={() => setGameState(GameState.MENU)} />
 
             {/* Coins Display */}
-            <div className="absolute top-4 right-4 flex items-center gap-2 bg-gray-800/80 px-4 py-2 rounded-lg border border-gray-600">
+            <div className="absolute top-4 right-4 flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/30 z-10">
                 <CoinIcon />
                 <span className="text-yellow-400 font-bold">{coins}</span>
             </div>
@@ -460,18 +538,18 @@ const ShopScreen: React.FC = () => {
                 <div className="flex justify-center gap-4 mb-6">
                     <button
                         onClick={() => setActiveTab('balls')}
-                        className={`px-6 py-2 rounded-full font-bold transition-colors ${activeTab === 'balls'
-                                ? 'bg-yellow-500 text-black'
-                                : 'bg-gray-700 text-white hover:bg-gray-600'
+                        className={`px-6 py-2 rounded-full font-bold transition-colors backdrop-blur-md border ${activeTab === 'balls'
+                                ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50'
+                                : 'bg-white/10 text-white border-white/30 hover:bg-white/20 hover:border-white/50'
                             }`}
                     >
                         BALL SKINS
                     </button>
                     <button
                         onClick={() => setActiveTab('backgrounds')}
-                        className={`px-6 py-2 rounded-full font-bold transition-colors ${activeTab === 'backgrounds'
-                                ? 'bg-yellow-500 text-black'
-                                : 'bg-gray-700 text-white hover:bg-gray-600'
+                        className={`px-6 py-2 rounded-full font-bold transition-colors backdrop-blur-md border ${activeTab === 'backgrounds'
+                                ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50'
+                                : 'bg-white/10 text-white border-white/30 hover:bg-white/20 hover:border-white/50'
                             }`}
                     >
                         BACKGROUNDS
@@ -496,8 +574,6 @@ const OptionsScreen: React.FC = () => {
         setGameState,
         options,
         setDifficulty,
-        setMusicVolume,
-        setSfxVolume,
         setInputBinding,
         ballSkins,
         backgroundSkins,
@@ -531,9 +607,9 @@ const OptionsScreen: React.FC = () => {
                                 <button
                                     key={diff}
                                     onClick={() => setDifficulty(diff)}
-                                    className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-colors ${options.difficulty === diff
-                                            ? 'bg-purple-500 text-white'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-colors backdrop-blur-md border ${options.difficulty === diff
+                                            ? 'bg-purple-500/20 text-purple-300 border-purple-400/50'
+                                            : 'bg-white/10 text-gray-300 border-white/30 hover:bg-white/20 hover:border-white/50'
                                         }`}
                                 >
                                     {difficultyLabels[diff]}
@@ -586,38 +662,6 @@ const OptionsScreen: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Music Volume */}
-                    <div>
-                        <label className="text-gray-400 text-sm block mb-2">
-                            MUSIC VOLUME: {Math.round(options.musicVolume * 100)}%
-                        </label>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={options.musicVolume}
-                            onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                        />
-                    </div>
-
-                    {/* SFX Volume */}
-                    <div>
-                        <label className="text-gray-400 text-sm block mb-2">
-                            SFX VOLUME: {Math.round(options.sfxVolume * 100)}%
-                        </label>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={options.sfxVolume}
-                            onChange={(e) => setSfxVolume(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                        />
-                    </div>
-
                     {/* Input Bindings */}
                     <div>
                         <label className="text-gray-400 text-sm block mb-2">CONTROLS</label>
@@ -650,10 +694,10 @@ const InfoScreen: React.FC = () => {
     const { setGameState } = useGameStore();
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-20 backdrop-blur-sm">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-20 backdrop-blur-sm overflow-y-auto py-8">
             <BackButton onClick={() => setGameState(GameState.MENU)} />
 
-            <div className="text-center max-w-lg w-full h-full p-8 border border-blue-500/30 rounded-2xl bg-black/50">
+            <div className="text-center max-w-lg w-full min-h-0 p-8 border border-blue-500/30 rounded-2xl bg-black/50 my-auto">
                 <h2 className="text-4xl font-bold text-blue-400 mb-6">HOW TO PLAY</h2>
 
                 <div className="space-y-6 text-left">
