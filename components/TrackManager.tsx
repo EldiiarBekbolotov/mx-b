@@ -131,6 +131,8 @@ const Obstacle: React.FC<{
     segmentRot: Euler;
 }> = React.memo(({ data, segmentPos, segmentRot }) => {
     const meshRef = useRef<Mesh>(null);
+    const glowMeshRef = useRef<Mesh>(null);
+    const lightRef = useRef<THREE.PointLight>(null);
     const initialPos = useRef<Vector3 | null>(null);
 
     const worldPos = useMemo(() => {
@@ -171,14 +173,60 @@ const Obstacle: React.FC<{
 
             api.position.set(newX, newY, newZ);
             meshRef.current.position.set(newX, newY, newZ);
+            
+            // Move glow and light with obstacle
+            if (glowMeshRef.current) {
+                glowMeshRef.current.position.set(newX, newY, newZ);
+            }
+            if (lightRef.current) {
+                lightRef.current.position.set(newX, newY, newZ);
+            }
         }
     });
 
+    // Calculate glow size (slightly larger than obstacle)
+    const glowSize = useMemo(() => {
+        return data.size.map((s: number) => s * 1.15) as [number, number, number];
+    }, [data.size]);
+
     return (
-        <mesh ref={ref as React.RefObject<Mesh>} castShadow receiveShadow>
-            <boxGeometry args={data.size} />
-            <meshStandardMaterial color="#ff0044" emissive="#ff0000" emissiveIntensity={4} />
-        </mesh>
+        <group>
+            {/* Outer glow layer - bright neon effect (unlit for visibility) */}
+            <mesh 
+                ref={glowMeshRef}
+                position={[worldPos.x, worldPos.y, worldPos.z]} 
+                rotation={[segmentRot.x, segmentRot.y, segmentRot.z]}
+            >
+                <boxGeometry args={glowSize} />
+                <meshBasicMaterial 
+                    color="#ff0000"
+                    transparent={true}
+                    opacity={0.7}
+                />
+            </mesh>
+            
+            {/* Main obstacle - very deep dark red */}
+            <mesh ref={ref as React.RefObject<Mesh>} castShadow receiveShadow>
+                <boxGeometry args={data.size} />
+                <meshStandardMaterial 
+                    color="#330000" 
+                    emissive="#ff0000" 
+                    emissiveIntensity={25}
+                    roughness={0.05}
+                    metalness={0.05}
+                />
+            </mesh>
+            
+            {/* Bright point light for neon glow */}
+            <pointLight 
+                ref={lightRef}
+                color="#ff0000" 
+                intensity={5} 
+                distance={15} 
+                decay={1}
+                position={[worldPos.x, worldPos.y, worldPos.z]}
+            />
+        </group>
     );
 });
 

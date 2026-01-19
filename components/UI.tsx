@@ -574,11 +574,7 @@ const OptionsScreen: React.FC = () => {
         setGameState,
         options,
         setDifficulty,
-        setInputBinding,
-        ballSkins,
-        backgroundSkins,
-        selectBallSkin,
-        selectBackgroundSkin
+        setInputBinding
     } = useGameStore();
 
     const difficulties: Difficulty[] = [Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD];
@@ -587,9 +583,6 @@ const OptionsScreen: React.FC = () => {
         [Difficulty.NORMAL]: 'NORMAL (1.0x)',
         [Difficulty.HARD]: 'HARD (1.15x)'
     };
-
-    const ownedBallSkins = ballSkins.filter(s => s.owned);
-    const ownedBackgroundSkins = backgroundSkins.filter(s => s.owned);
 
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-20 backdrop-blur-sm overflow-y-auto py-8">
@@ -614,50 +607,6 @@ const OptionsScreen: React.FC = () => {
                                 >
                                     {difficultyLabels[diff]}
                                 </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Ball Color */}
-                    <div>
-                        <label className="text-gray-400 text-sm block mb-2">BALL COLOR</label>
-                        <div className="flex gap-2 flex-wrap">
-                            {ownedBallSkins.map(skin => (
-                                <button
-                                    key={skin.id}
-                                    onClick={() => selectBallSkin(skin.id)}
-                                    className={`w-10 h-10 rounded-full border-2 transition-all ${options.ballSkinId === skin.id
-                                            ? 'border-white scale-110'
-                                            : 'border-gray-600 hover:border-gray-400'
-                                        }`}
-                                    style={{
-                                        backgroundColor: skin.color,
-                                        boxShadow: `0 0 10px ${skin.emissiveColor}60`
-                                    }}
-                                    title={skin.name}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Background */}
-                    <div>
-                        <label className="text-gray-400 text-sm block mb-2">BACKGROUND</label>
-                        <div className="flex gap-2 flex-wrap">
-                            {ownedBackgroundSkins.map(skin => (
-                                <button
-                                    key={skin.id}
-                                    onClick={() => selectBackgroundSkin(skin.id)}
-                                    className={`w-10 h-10 rounded-lg border-2 transition-all ${options.backgroundSkinId === skin.id
-                                            ? 'border-white scale-110'
-                                            : 'border-gray-600 hover:border-gray-400'
-                                        }`}
-                                    style={{
-                                        backgroundColor: skin.backgroundColor,
-                                        boxShadow: `0 0 10px ${skin.outlineColor}60`
-                                    }}
-                                    title={skin.name}
-                                />
                             ))}
                         </div>
                     </div>
